@@ -89,7 +89,10 @@ public class GeneticAlgorithm : MonoBehaviour
 
     [Header("Debug")]
     [SerializeField] private bool logProgress = true;
-
+    public void SetPopulationSize(int value) { populationSize = value; }
+    public void SetGenerations(int value) { generations = value; }
+    public void SetCrossoverRate(float value) { crossoverRate = value; }
+    public void SetMutationRate(float value) { mutationRate = value; }
     /*
      * ============================================================
      * ALGORITMO GENÉTICO

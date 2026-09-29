@@ -49,6 +49,10 @@ public class EvolutionaryStrategy : MonoBehaviour
 
     [Header("Debug")]
     [SerializeField] private bool logProgress = true;
+    public void SetMu(int value) { mu = value; }
+    public void SetLambda(int value) { lambda = value; }
+    public void SetGenerations(int value) { generations = value; }
+    public void SetMutationRate(float value) { mutationRate = value; }
 
     /*
      * ============================================================

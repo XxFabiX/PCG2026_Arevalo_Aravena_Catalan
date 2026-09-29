@@ -409,4 +409,14 @@ public class PokemonTeamController : MonoBehaviour
                 $"Roles: {team.uniqueRoles}/3";
         }
     }
+    // CONTROLES PARA GENETIC ALGORITHM 
+    public void UI_SetGAPopulation(string val) { if (int.TryParse(val, out int v)) geneticAlgorithm.SetPopulationSize(v); }
+    public void UI_SetGAGenerations(string val) { if (int.TryParse(val, out int v)) geneticAlgorithm.SetGenerations(v); }
+    public void UI_SetGACrossover(float v) { geneticAlgorithm.SetCrossoverRate(v); }
+    public void UI_SetGAMutation(float v) { geneticAlgorithm.SetMutationRate(v); }
+
+    // CONTROLES PARA EVOLUTIONARY STRATEGY 
+    public void UI_SetESMu(string val) { if (int.TryParse(val, out int v)) evolutionaryStrategy.SetMu(v); }
+    public void UI_SetESLambda(string val) { if (int.TryParse(val, out int v)) evolutionaryStrategy.SetLambda(v); }
+    public void UI_SetESMutation(float v) { evolutionaryStrategy.SetMutationRate(v); }
 }
