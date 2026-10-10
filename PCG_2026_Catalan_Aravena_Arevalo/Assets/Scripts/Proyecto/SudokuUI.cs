@@ -7,6 +7,8 @@ public class SudokuUI : MonoBehaviour
     private SudokuBoard board;
     private Image[,] cellBackgrounds = new Image[9, 9];
     private Text[,] cellTexts = new Text[9, 9];
+    private InputField difficultyInput;
+    private Text victoryText;
 
     private int selectedRow = 0;
     private int selectedCol = 0;
@@ -107,6 +109,70 @@ public class SudokuUI : MonoBehaviour
                 }
             }
         }
+        // --- BOTÓN DE REGENERAR ---
+        GameObject buttonObj = new GameObject("RegenerateButton");
+        buttonObj.transform.SetParent(canvas.transform, false);
+        RectTransform btnRect = buttonObj.AddComponent<RectTransform>();
+        btnRect.anchoredPosition = new Vector2(0, -280);
+        btnRect.sizeDelta = new Vector2(200, 50);
+        Image btnImage = buttonObj.AddComponent<Image>();
+        btnImage.color = new Color(0.2f, 0.6f, 0.2f); // Verde
+        Button btn = buttonObj.AddComponent<Button>();
+
+        GameObject btnTextObj = new GameObject("BtnText");
+        btnTextObj.transform.SetParent(buttonObj.transform, false);
+        Text btnText = btnTextObj.AddComponent<Text>();
+        btnText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        btnText.color = Color.white;
+        btnText.text = "Regenerar Tablero";
+        btnText.alignment = TextAnchor.MiddleCenter;
+        btnText.fontSize = 20;
+
+        btn.onClick.AddListener(RegenerateBoard);
+
+        // --- CAMPO DE TEXTO (INPUT FIELD) PARA EL PARÁMETRO ---
+        GameObject inputObj = new GameObject("DifficultyInput");
+        inputObj.transform.SetParent(canvas.transform, false);
+        RectTransform inputRect = inputObj.AddComponent<RectTransform>();
+        inputRect.anchoredPosition = new Vector2(0, -350);
+        inputRect.sizeDelta = new Vector2(200, 40);
+
+        Image inputImage = inputObj.AddComponent<Image>();
+        inputImage.color = Color.white; // Fondo blanco para que parezca una caja de texto
+
+        difficultyInput = inputObj.AddComponent<InputField>();
+        difficultyInput.characterValidation = InputField.CharacterValidation.Integer; // Solo permite escribir números enteros
+        difficultyInput.text = "40"; // Valor por defecto
+
+        // El componente de texto real donde se ven los números escritos
+        GameObject inputTextObj = new GameObject("InputText");
+        inputTextObj.transform.SetParent(inputObj.transform, false);
+        RectTransform textRect = inputTextObj.AddComponent<RectTransform>();
+        textRect.anchorMin = Vector2.zero;
+        textRect.anchorMax = Vector2.one;
+        Text inputText = inputTextObj.AddComponent<Text>();
+        inputText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        inputText.color = Color.black;
+        inputText.alignment = TextAnchor.MiddleCenter;
+        inputText.fontSize = 22;
+
+        difficultyInput.textComponent = inputText;
+        // --- TEXTO DE VICTORIA ---
+        GameObject victoryObj = new GameObject("VictoryText");
+        victoryObj.transform.SetParent(canvas.transform, false);
+        RectTransform vicRect = victoryObj.AddComponent<RectTransform>();
+        vicRect.anchoredPosition = new Vector2(0, 300); // Aparecerá en la parte superior
+        vicRect.sizeDelta = new Vector2(400, 100);
+
+        victoryText = victoryObj.AddComponent<Text>();
+        victoryText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        victoryText.color = new Color(0.1f, 0.7f, 0.1f); // Verde oscuro
+        victoryText.text = "¡FELICIDADES, HAS GANADO!";
+        victoryText.alignment = TextAnchor.MiddleCenter;
+        victoryText.fontSize = 30;
+        victoryText.fontStyle = FontStyle.Bold;
+
+        victoryObj.SetActive(false); // Lo ocultamos al iniciar
     }
 
     void UpdateUIFromBoard()
@@ -173,7 +239,16 @@ public class SudokuUI : MonoBehaviour
         int conflicts = board.CountConflicts();
         if (conflicts == 0)
         {
-            Debug.Log("¡Tablero sin conflictos hasta el momento!");
+            // Verificamos si además de 0 conflictos, el tablero está completamente lleno
+            if (board.IsBoardFull())
+            {
+                Debug.Log("¡JUEGO COMPLETADO!");
+                if (victoryText != null) victoryText.gameObject.SetActive(true); // Mostramos el mensaje
+            }
+            else
+            {
+                Debug.Log("¡Tablero sin conflictos hasta el momento!");
+            }
         }
         else
         {
@@ -199,5 +274,26 @@ public class SudokuUI : MonoBehaviour
                 }
             }
         }
+    }
+    void RegenerateBoard()
+    {
+        // Ocultar mensaje de victoria si estaba visible
+        if (victoryText != null) victoryText.gameObject.SetActive(false);
+
+        // ... (resto del código de RegenerateBoard que ya tenías)
+
+        int cellsToRemove = 40;
+        if (int.TryParse(difficultyInput.text, out int parsedValue))
+        {
+            cellsToRemove = Mathf.Clamp(parsedValue, 0, 81);
+        }
+
+        difficultyInput.text = cellsToRemove.ToString();
+        board = new SudokuBoard();
+        board.GenerateBackward(cellsToRemove);
+        selectedRow = 0;
+        selectedCol = 0;
+        UpdateUIFromBoard();
+        HighlightSelectedCell();
     }
 }

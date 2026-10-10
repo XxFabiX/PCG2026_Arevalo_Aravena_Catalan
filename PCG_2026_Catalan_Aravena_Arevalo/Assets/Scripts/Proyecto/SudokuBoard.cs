@@ -115,4 +115,16 @@ public class SudokuBoard
             grid[r2, c] = temp;
         }
     }
+    public bool IsBoardFull()
+    {
+        for (int r = 0; r < 9; r++)
+        {
+            for (int c = 0; c < 9; c++)
+            {
+                // Si encuentra al menos un 0, el tablero no está lleno
+                if (grid[r, c] == 0) return false;
+            }
+        }
+        return true;
+    }
 }
