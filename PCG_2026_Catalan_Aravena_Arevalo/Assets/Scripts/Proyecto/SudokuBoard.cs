@@ -36,24 +36,27 @@ public class SudokuBoard
     {
         int conflicts = 0;
 
-        
+        // Declaramos los arreglos UNA SOLA VEZ fuera de los bucles para no saturar la memoria
+        int[] rowCounts = new int[10];
+        int[] colCounts = new int[10];
+        int[] boxCounts = new int[10];
+
+        // 1. Filas y columnas
         for (int i = 0; i < 9; i++)
         {
-            // arreglo para contar las veces que salen los numeros del 1 al 9 en cada fila y columna
-            int[] rowCounts = new int[10];
-            int[] colCounts = new int[10];
+            // Limpiamos los arreglos llenándolos de ceros en lugar de crear nuevos
+            System.Array.Clear(rowCounts, 0, 10);
+            System.Array.Clear(colCounts, 0, 10);
 
             for (int j = 0; j < 9; j++)
             {
                 int rowVal = grid[i, j];
-                int colVal = grid[j, i]; 
+                int colVal = grid[j, i];
 
-                // si la celda no esta vacia sumamos 1
                 if (rowVal != 0) rowCounts[rowVal]++;
                 if (colVal != 0) colCounts[colVal]++;
             }
 
-            //revisamos los contadores y si hay un numero repetido lo sumamos a los conflictos
             for (int val = 1; val <= 9; val++)
             {
                 if (rowCounts[val] > 1) conflicts += (rowCounts[val] - 1);
@@ -61,24 +64,21 @@ public class SudokuBoard
             }
         }
 
-        // se subdivide en grillas de 3x3
-        // revisamos los bloques de 3x3 en caso de tener repetidos.
+        // 2. Subgrillas de 3x3
         for (int boxRow = 0; boxRow < 3; boxRow++)
         {
             for (int boxCol = 0; boxCol < 3; boxCol++)
             {
-                int[] boxCounts = new int[10];
+                System.Array.Clear(boxCounts, 0, 10);
                 for (int r = 0; r < 3; r++)
                 {
                     for (int c = 0; c < 3; c++)
                     {
-                        // calcula las coordenadas a partir del bloque
                         int val = grid[boxRow * 3 + r, boxCol * 3 + c];
                         if (val != 0) boxCounts[val]++;
                     }
                 }
 
-                //sumamos conflictos dentro de bloques de 3x3
                 for (int val = 1; val <= 9; val++)
                 {
                     if (boxCounts[val] > 1) conflicts += (boxCounts[val] - 1);
@@ -124,15 +124,32 @@ public class SudokuBoard
     // limitamos los intercambios solo a bandas horizontales de los 3x3
     private void ShuffleBoard()
     {
-        int band = Random.Range(0, 3); // elige una banda 
-        int r1 = band * 3 + Random.Range(0, 3); 
-        int r2 = band * 3 + Random.Range(0, 3); 
-
-        for (int c = 0; c < 9; c++)
+        // Hacemos 20 intercambios para que quede muy bien mezclado
+        for (int i = 0; i < 20; i++)
         {
-            int temp = grid[r1, c];
-            grid[r1, c] = grid[r2, c];
-            grid[r2, c] = temp;
+            // Mezclar dos filas dentro de la misma banda horizontal
+            int rowBand = Random.Range(0, 3);
+            int r1 = rowBand * 3 + Random.Range(0, 3);
+            int r2 = rowBand * 3 + Random.Range(0, 3);
+
+            for (int c = 0; c < 9; c++)
+            {
+                int temp = grid[r1, c];
+                grid[r1, c] = grid[r2, c];
+                grid[r2, c] = temp;
+            }
+
+            // Mezclar dos columnas dentro de la misma banda vertical
+            int colBand = Random.Range(0, 3);
+            int c1 = colBand * 3 + Random.Range(0, 3);
+            int c2 = colBand * 3 + Random.Range(0, 3);
+
+            for (int r = 0; r < 9; r++)
+            {
+                int temp = grid[r, c1];
+                grid[r, c1] = grid[r, c2];
+                grid[r, c2] = temp;
+            }
         }
     }
 
@@ -208,6 +225,44 @@ public class SudokuBoard
         }
     }
 
+    // ============================================================
+    // GENERADOR MAESTRO INTEGRADO (Evolución -> SA -> Backward)
+    // ============================================================
+    public void GenerateUltimateBoard(SudokuEvolution evoEngine, int cellsToRemove, float saTemp, float saCooling, int saIter)
+    {
+        grid = new int[9, 9]; // Matriz vacía para empezar desde cero
+
+        // 1. FASE GLOBAL: Estrategia Evolutiva
+        if (evoEngine != null)
+        {
+            SudokuBoard evolvedBoard = evoEngine.Solve(this);
+            this.grid = evolvedBoard.GetRawGrid(); // Copiamos el mejor resultado de la evolución
+        }
+
+        int conflictosActuales = CountConflicts();
+
+        // 2. FASE LOCAL: Simulated Annealing
+        // Si la evolución no logró los 0 conflictos perfectos, el SA entra como "pulidor"
+        if (conflictosActuales > 0)
+        {
+            Debug.Log($"Evolución dejó {conflictosActuales} conflictos. Pasando el relevo a Simulated Annealing...");
+            SolveWithSimulatedAnnealing(saTemp, saCooling, saIter);
+        }
+
+        // 3. FASE DE DISEÑO: Backward from Goal State
+        // Borramos casillas para convertir la solución perfecta en un puzle jugable
+        int removed = 0;
+        while (removed < cellsToRemove)
+        {
+            int randRow = Random.Range(0, 9);
+            int randCol = Random.Range(0, 9);
+            if (grid[randRow, randCol] != 0)
+            {
+                grid[randRow, randCol] = 0;
+                removed++;
+            }
+        }
+    }
 
     //aca se establece el motor con los parametros establecidos en el informe que serian temperatura, etc
     public void SolveWithSimulatedAnnealing(float initialTemperature = 100f, float coolingRate = 0.999f, int maxIterations = 50000)
@@ -276,7 +331,7 @@ public class SudokuBoard
             else
             {
                 //si es un vecino PEOR (tiene muchos conflictos), evaluamos la probabilidad igual
-                // Esto permite realizar movimientos "hacia abajo" para escapar de maximos/minimos locales[cite: 16].
+                // Esto permite realizar movimientos "hacia abajo" para escapar de maximos/minimos locales.
                 float acceptanceProbability = Mathf.Exp(-delta / currentTemp);
                 if (Random.value < acceptanceProbability)
                 {
@@ -298,5 +353,13 @@ public class SudokuBoard
 
         if (currentConflicts > 0)
             Debug.Log($"SA termino. Quedaron {currentConflicts} conflictos.");
+    }
+
+    // Crea una copia exacta del tablero y su mapa de celdas fijas
+    public SudokuBoard Clone()
+    {
+        SudokuBoard copy = new SudokuBoard(this.grid);
+        System.Array.Copy(this.fixedCells, copy.fixedCells, this.fixedCells.Length);
+        return copy;
     }
 }
