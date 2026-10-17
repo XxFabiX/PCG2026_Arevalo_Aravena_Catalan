@@ -9,21 +9,33 @@ public class SudokuManager : MonoBehaviour
 
     public SudokuBoard GenerateUltimateLevel(int cellsToRemove)
     {
-        Debug.Log("Iniciando Pipeline de Generación Procedural...");
-
+        Debug.Log("Iniciando Pipeline de Generación...");
         SudokuBoard board = new SudokuBoard();
 
-        // OPCIÓN INFALIBLE PARA EL INFORME: 
-        // Usamos la base matemática y el Backward para asegurar un tablero 100% válido y listo,
-        // y dejamos que la Búsqueda Local (SA) demuestre su funcionamiento y sus parámetros en la interfaz.
-        board.GenerateBackward(cellsToRemove);
-
-        // Si quieres usar la IA para refinar, aplicamos el SA directamente sobre un tablero semi-roto
-        // para que la consola muestre el éxito o el fallo según la configuración que pongas en la UI.
-        if (annealingEngine != null)
+        // FASE 1: La Evolución intenta diseñar la solución perfecta
+        if (evolutionEngine != null)
         {
-            // Opcional: Descomenta la siguiente línea si quieres que el SA intente pulir el tablero
-            // board = annealingEngine.Solve(board);
+            board = evolutionEngine.Solve(board);
+        }
+
+        // FASE 2: Si la evolución no pudo llegar a 0, el Annealing intenta pulir los errores
+        if (annealingEngine != null && board.CountConflicts() > 0)
+        {
+            Debug.Log("La Evolución dejó errores. Pasando a Simulated Annealing...");
+            board = annealingEngine.Solve(board);
+        }
+
+        // FASE 3 (GARANTÍA DE SOLUBILIDAD): Si la IA falló por completo, usamos la matemática
+        if (board.CountConflicts() > 0)
+        {
+            Debug.LogWarning("La IA se atascó. Aplicando Fórmula Matemática para garantizar que el juego sea resoluble.");
+            backwardEngine.CreateMathematicalBase(board);
+        }
+
+        // FASE 4: Borramos las celdas al tablero final (sea de la IA o el Matemático)
+        if (backwardEngine != null)
+        {
+            backwardEngine.RemoveCells(board, cellsToRemove);
         }
 
         PrintBoard(board);
