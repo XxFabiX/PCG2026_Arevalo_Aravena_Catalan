@@ -76,7 +76,7 @@ public class SudokuUI : MonoBehaviour
             canvasObj.AddComponent<GraphicRaycaster>();
         }
 
-        // 2. Panel Izquierdo (Fondo oscuro para el menú)
+        // 2. Panel Izquierdo (Fondo oscuro para el menú - Agrandado a 460px de ancho)
         GameObject leftPanelObj = new GameObject("LeftMenuPanel");
         leftPanelObj.transform.SetParent(canvas.transform, false);
         RectTransform leftBgRect = leftPanelObj.AddComponent<RectTransform>();
@@ -84,24 +84,24 @@ public class SudokuUI : MonoBehaviour
         leftBgRect.anchorMax = new Vector2(0, 1); // Alto completo
         leftBgRect.pivot = new Vector2(0, 0.5f);
         leftBgRect.anchoredPosition = new Vector2(0, 0);
-        leftBgRect.sizeDelta = new Vector2(380, 0); // 380 píxeles de ancho
+        leftBgRect.sizeDelta = new Vector2(460, 0);
         Image leftBg = leftPanelObj.AddComponent<Image>();
         leftBg.color = new Color(0.12f, 0.12f, 0.15f, 0.95f); // Gris oscuro
 
-        // 3. Contenedor del Tablero (A la derecha del menú)
+        // 3. Contenedor del Tablero (A la derecha del menú - Escalado a 1000x1000)
         GameObject mainPanel = new GameObject("SudokuMainPanel");
         mainPanel.transform.SetParent(canvas.transform, false);
         RectTransform mainRect = mainPanel.AddComponent<RectTransform>();
-        mainRect.sizeDelta = new Vector2(600, 600);
-        mainRect.anchoredPosition = new Vector2(250, 0); // Desplazado al centro-derecha
+        mainRect.sizeDelta = new Vector2(1000, 1000); // Tablero grande de 1000x1000
+        mainRect.anchoredPosition = new Vector2(360, 0); // Posicionado estéticamente a la derecha
 
         Image mainBg = mainPanel.AddComponent<Image>();
         mainBg.color = new Color(0.15f, 0.15f, 0.15f);
 
         GridLayoutGroup mainGrid = mainPanel.AddComponent<GridLayoutGroup>();
-        mainGrid.cellSize = new Vector2(194, 194);
-        mainGrid.spacing = new Vector2(6, 6);
-        mainGrid.padding = new RectOffset(6, 6, 6, 6);
+        mainGrid.cellSize = new Vector2(320, 320); // Tamaño proporcional para cada bloque 3x3
+        mainGrid.spacing = new Vector2(8, 8);
+        mainGrid.padding = new RectOffset(8, 8, 8, 8);
         mainGrid.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
         mainGrid.constraintCount = 3;
 
@@ -116,9 +116,9 @@ public class SudokuUI : MonoBehaviour
                 blockBg.color = new Color(0.6f, 0.6f, 0.6f);
 
                 GridLayoutGroup blockGrid = blockObj.AddComponent<GridLayoutGroup>();
-                blockGrid.cellSize = new Vector2(62, 62);
-                blockGrid.spacing = new Vector2(2, 2);
-                blockGrid.padding = new RectOffset(2, 2, 2, 2);
+                blockGrid.cellSize = new Vector2(100, 100); // Celdas individuales de 100x100
+                blockGrid.spacing = new Vector2(3, 3);
+                blockGrid.padding = new RectOffset(3, 3, 3, 3);
                 blockGrid.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
                 blockGrid.constraintCount = 3;
 
@@ -142,7 +142,7 @@ public class SudokuUI : MonoBehaviour
                         text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
                         text.color = Color.black;
                         text.alignment = TextAnchor.MiddleCenter;
-                        text.fontSize = 32;
+                        text.fontSize = 52; // Fuente grande y proporcional para celdas de 100px
                         cellTexts[globalRow, globalCol] = text;
                     }
                 }
@@ -150,15 +150,15 @@ public class SudokuUI : MonoBehaviour
         }
 
         // =========================================================
-        // FUNCIONES AUXILIARES PARA CREAR LA UI LIMPIA
+        // FUNCIONES AUXILIARES PARA CREAR LA UI PROPORCIONAL
         // =========================================================
-        Text CreateLabel(string title, Vector2 pos, Transform parent, int fontSize = 18, TextAnchor align = TextAnchor.MiddleRight)
+        Text CreateLabel(string title, Vector2 pos, Transform parent, int fontSize = 22, TextAnchor align = TextAnchor.MiddleRight)
         {
             GameObject labelObj = new GameObject(title + "_Label");
             labelObj.transform.SetParent(parent, false);
             RectTransform rect = labelObj.AddComponent<RectTransform>();
             rect.anchoredPosition = pos;
-            rect.sizeDelta = new Vector2(180, 30);
+            rect.sizeDelta = new Vector2(230, 40); // Más ancho para textos grandes
             Text txt = labelObj.AddComponent<Text>();
             txt.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
             txt.color = Color.white;
@@ -174,7 +174,7 @@ public class SudokuUI : MonoBehaviour
             inputObj.transform.SetParent(parent, false);
             RectTransform inputRect = inputObj.AddComponent<RectTransform>();
             inputRect.anchoredPosition = pos;
-            inputRect.sizeDelta = new Vector2(100, 35);
+            inputRect.sizeDelta = new Vector2(130, 45); // Inputs más grandes y cómodos
             Image inputImage = inputObj.AddComponent<Image>(); inputImage.color = new Color(0.9f, 0.9f, 0.9f);
 
             InputField inputField = inputObj.AddComponent<InputField>();
@@ -190,67 +190,67 @@ public class SudokuUI : MonoBehaviour
             txt.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
             txt.color = Color.black;
             txt.alignment = TextAnchor.MiddleCenter;
-            txt.fontSize = 18;
+            txt.fontSize = 22; // Texto interior más grande
             inputField.textComponent = txt;
             return inputField;
         }
 
         // =========================================================
-        // AGREGANDO LOS CONTROLES AL PANEL IZQUIERDO
+        // AGREGANDO LOS CONTROLES AL PANEL IZQUIERDO (ESCALADOS)
         // =========================================================
 
-        CreateLabel("PARÁMETROS PCG", new Vector2(0, 250), leftPanelObj.transform, 22, TextAnchor.MiddleCenter);
+        CreateLabel("PARÁMETROS PCG", new Vector2(0, 320), leftPanelObj.transform, 26, TextAnchor.MiddleCenter);
 
-        // Inputs de la IA
-        CreateLabel("Temperatura SA :", new Vector2(-60, 180), leftPanelObj.transform);
-        tempInput = CreateInput("1000", new Vector2(90, 180), leftPanelObj.transform, InputField.CharacterValidation.Decimal);
+        // Inputs de la IA (Espaciado vertical y horizontal proporcional)
+        CreateLabel("Temperatura SA :", new Vector2(-75, 220), leftPanelObj.transform, 20);
+        tempInput = CreateInput("1000", new Vector2(120, 220), leftPanelObj.transform, InputField.CharacterValidation.Decimal);
 
-        CreateLabel("Enfriamiento SA :", new Vector2(-60, 120), leftPanelObj.transform);
-        coolingInput = CreateInput("0.9999", new Vector2(90, 120), leftPanelObj.transform, InputField.CharacterValidation.Decimal);
+        CreateLabel("Enfriamiento SA :", new Vector2(-75, 140), leftPanelObj.transform, 20);
+        coolingInput = CreateInput("0.9999", new Vector2(120, 140), leftPanelObj.transform, InputField.CharacterValidation.Decimal);
 
-        CreateLabel("Iteraciones SA :", new Vector2(-60, 60), leftPanelObj.transform);
-        iterInput = CreateInput("200000", new Vector2(90, 60), leftPanelObj.transform, InputField.CharacterValidation.Integer);
+        CreateLabel("Iteraciones SA :", new Vector2(-75, 60), leftPanelObj.transform, 20);
+        iterInput = CreateInput("200000", new Vector2(120, 60), leftPanelObj.transform, InputField.CharacterValidation.Integer);
 
         // Input de Backward
-        CreateLabel("Celdas a Borrar :", new Vector2(-60, 0), leftPanelObj.transform);
-        difficultyInput = CreateInput("40", new Vector2(90, 0), leftPanelObj.transform, InputField.CharacterValidation.Integer);
+        CreateLabel("Celdas a Borrar :", new Vector2(-75, -20), leftPanelObj.transform, 20);
+        difficultyInput = CreateInput("40", new Vector2(120, -20), leftPanelObj.transform, InputField.CharacterValidation.Integer);
 
-        // Botón Maestro de Generación
+        // Botón Maestro de Generación (Más grande y legible)
         GameObject btnObj = new GameObject("GenerateButton");
         btnObj.transform.SetParent(leftPanelObj.transform, false);
         RectTransform btnRect = btnObj.AddComponent<RectTransform>();
-        btnRect.anchoredPosition = new Vector2(0, -100);
-        btnRect.sizeDelta = new Vector2(300, 60);
+        btnRect.anchoredPosition = new Vector2(0, -130);
+        btnRect.sizeDelta = new Vector2(380, 70);
         Image btnImage = btnObj.AddComponent<Image>(); btnImage.color = new Color(0.2f, 0.65f, 0.35f); // Verde
         Button genBtn = btnObj.AddComponent<Button>();
         Text btnTxt = CreateLabel("Generar Nivel Procedural\n(Evolución -> SA -> Backward)", Vector2.zero, btnObj.transform, 16, TextAnchor.MiddleCenter);
-        btnTxt.GetComponent<RectTransform>().sizeDelta = new Vector2(300, 60);
+        btnTxt.GetComponent<RectTransform>().sizeDelta = new Vector2(380, 70);
         genBtn.onClick.AddListener(RegenerateUltimate);
 
-        // Botón Restaurar Tablero
+        // Botón Restaurar Tablero (Más grande y legible)
         GameObject resObj = new GameObject("RestoreButton");
         resObj.transform.SetParent(leftPanelObj.transform, false);
         RectTransform resRect = resObj.AddComponent<RectTransform>();
-        resRect.anchoredPosition = new Vector2(0, -180);
-        resRect.sizeDelta = new Vector2(300, 50);
+        resRect.anchoredPosition = new Vector2(0, -220);
+        resRect.sizeDelta = new Vector2(380, 60);
         Image resImage = resObj.AddComponent<Image>(); resImage.color = new Color(0.2f, 0.4f, 0.8f); // Azul
         Button resBtn = resObj.AddComponent<Button>();
-        Text resTxt = CreateLabel("Restaurar Tablero Inicial", Vector2.zero, resObj.transform, 16, TextAnchor.MiddleCenter);
-        resTxt.GetComponent<RectTransform>().sizeDelta = new Vector2(300, 50);
+        Text resTxt = CreateLabel("Restaurar Tablero Inicial", Vector2.zero, resObj.transform, 18, TextAnchor.MiddleCenter);
+        resTxt.GetComponent<RectTransform>().sizeDelta = new Vector2(380, 60);
         resBtn.onClick.AddListener(RestoreInitialBoard);
 
-        // Texto de Victoria (Arriba del tablero)
+        // Texto de Victoria (Arriba del tablero grande)
         GameObject victoryObj = new GameObject("VictoryText");
         victoryObj.transform.SetParent(canvas.transform, false);
         RectTransform vicRect = victoryObj.AddComponent<RectTransform>();
-        vicRect.anchoredPosition = new Vector2(250, 350); // Sobre el tablero
-        vicRect.sizeDelta = new Vector2(600, 80);
+        vicRect.anchoredPosition = new Vector2(320, 490);
+        vicRect.sizeDelta = new Vector2(800, 80);
         victoryText = victoryObj.AddComponent<Text>();
         victoryText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
         victoryText.color = new Color(0.1f, 0.7f, 0.1f);
         victoryText.text = "¡FELICIDADES, HAS RESUELTO EL SUDOKU!";
         victoryText.alignment = TextAnchor.MiddleCenter;
-        victoryText.fontSize = 32;
+        victoryText.fontSize = 38;
         victoryText.fontStyle = FontStyle.Bold;
         victoryObj.SetActive(false);
     }
